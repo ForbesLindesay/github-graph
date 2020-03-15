@@ -1,0 +1,36 @@
+{
+  "name": "@github-graph/cli",
+  "version": "0.0.0",
+  "bin": {
+    "github-graph": "./lib/cli.js"
+  },
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "repository": "git@github.com:ForbesLindesay/github-graph.git",
+  "author": "Forbes Lindesay <forbes@lindesay.co.uk>",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@babel/code-frame": "^7.8.3",
+    "@octokit/graphql-schema": "^6.70.0",
+    "apollo-codegen-core": "^0.36.4",
+    "apollo-codegen-typescript": "^0.36.4",
+    "camel-case": "^4.1.1",
+    "graphql": "^14.6.0"
+  },
+  "peerDependencies": {
+    "@github-graph/api": "*"
+  },
+  "devDependencies": {
+    "@forbeslindesay/tsconfig": "^2.0.0",
+    "@github-graph/api": "0.0.0",
+    "@types/babel__code-frame": "^7.0.1",
+    "@types/node": "^13.9.1",
+    "typescript": "^3.8.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

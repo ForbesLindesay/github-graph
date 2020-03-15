@@ -1,0 +1,24 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`example schema error 1`] = `
+"Cannot query field \\"logn\\" on type \\"User\\"
+
+  1 | query GetLogin {
+  2 |   viewer {
+> 3 |     logn
+    |     ^
+  4 |   }
+  5 | }
+  6 | 
+"
+`;
+
+exports[`example syntax error 1`] = `
+"Syntax Error: Expected Name, found <EOF>
+
+  3 |     login
+  4 |   
+> 5 | }
+    |  ^
+"
+`;
