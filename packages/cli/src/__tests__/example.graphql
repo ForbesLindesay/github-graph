@@ -1,0 +1,46 @@
+query GetLogin {
+  viewer {
+    login
+  }
+}
+
+query GetStargazers($owner: String!, $name: String!) {
+  repository(owner: $owner, name: $name) {
+    nameWithOwner
+    stargazers {
+      totalCount
+    }
+  }
+}
+
+query GetWatchers($owner: String!, $name: String!) {
+  repository(owner: $owner, name: $name) {
+    nameWithOwner
+    watchers {
+      totalCount
+    }
+  }
+}
+
+mutation AddStar($input: AddStarInput!) {
+  addStar(input: $input) {
+    starrable {
+      id
+    }
+  }
+}
+
+query GetWithFragment {
+  repository(owner: "pugjs", name: "pug") {
+    ...repo
+  }
+}
+fragment repo on Repository {
+  nameWithOwner
+  stargazers {
+    totalCount
+  }
+  watchers {
+    totalCount
+  }
+}
