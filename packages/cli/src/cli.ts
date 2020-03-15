@@ -5,7 +5,7 @@ import {writeFileSync} from 'fs';
 
 try {
   writeFileSync(
-    process.argv[2].replace(/\.graphql^/, '.ts'),
+    process.argv[2].replace(/\.[^\.]+$/, '.ts'),
     generate(process.argv[2]),
   );
 } catch (ex) {
