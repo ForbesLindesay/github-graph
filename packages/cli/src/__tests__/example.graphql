@@ -44,3 +44,15 @@ fragment repo on Repository {
     totalCount
   }
 }
+
+query GetPullRequestHeadSha($owner: String!, $name: String!, $number: Int!) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $number) {
+      headRef {
+        target {
+          oid
+        }
+      }
+    }
+  }
+}

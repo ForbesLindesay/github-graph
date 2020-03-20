@@ -26,7 +26,7 @@ export default function generate(inputFile: string) {
   }
   let context: CompilerContext;
   try {
-    context = compileToIR(schema, document);
+    context = compileToIR(schema, document, {passthroughCustomScalars: true});
   } catch (ex) {
     ex.message = formatError(ex, source);
     ex.code = 'GITHUB_SCHEMA_ERROR';
@@ -73,9 +73,60 @@ export default function generate(inputFile: string) {
     generator.interfacesForFragment(fragment);
   });
   const [header, ...rest] = sharedTypes.split('\n\n');
+  const customScalars = {
+    Date: {
+      type: 'string',
+      comment: 'An ISO-8601 encoded date string',
+    },
+    DateTime: {
+      type: 'string',
+      comment: 'An ISO-8601 encoded UTC date string',
+    },
+    GitObjectID: {
+      type: 'string',
+      comment: 'A Git object ID',
+    },
+    GitRefname: {
+      type: 'string',
+      comment: 'A fully qualified reference name (e.g. "refs/heads/master")',
+    },
+    GitSSHRemote: {
+      type: 'string',
+      comment: 'Git SSH string',
+    },
+    GitTimestamp: {
+      type: 'string',
+      comment:
+        'An ISO-8601 encoded date string. Unlike the DateTime type, GitTimestamp is not converted in UTC.',
+    },
+    HTML: {
+      type: 'string',
+      comment: 'A string containing HTML code.',
+    },
+    PreciseDateTime: {
+      type: 'string',
+      comment: 'An ISO-8601 encoded UTC date string with millisecond precison.',
+    },
+    URI: {
+      type: 'string',
+      comment:
+        'An RFC 3986, RFC 3987, and RFC 6570 (level 4) compliant URI string.',
+    },
+    X509Certificate: {
+      type: 'string',
+      comment: 'A valid x509 certificate string',
+    },
+  };
   return (
     header +
-    `\n\nimport {getMethod, gql} from '@github-graph/api';\n\n` +
+    `\n\nimport {getMethod, gql} from '@github-graph/api';\n\n${Object.entries(
+      customScalars,
+    )
+      .map(
+        ([key, value]) =>
+          `/**\n * ${value.comment}\n */\nexport type ${key} = ${value.type};`,
+      )
+      .join('\n')}\n\n` +
     rest.join('\n\n') +
     '\n\n' +
     generator.printer.printAndClear()
