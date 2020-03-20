@@ -13,8 +13,6 @@ export {auth};
 export {gql};
 
 export type Options = {
-  auth: Pick<AuthInterface<any, any>, 'hook'>;
-  userAgent?: string;
   onRequest?: (request: {query: string; variables: any}) => void;
   onResponse?: (
     request: {query: string; variables: any},
@@ -25,7 +23,18 @@ export type Options = {
       data: any;
     },
   ) => void;
-};
+} & (
+  | {
+      auth: Pick<AuthInterface<any, any>, 'hook'>;
+      userAgent?: string;
+      request?: undefined;
+    }
+  | {
+      auth?: undefined;
+      userAgent?: undefined;
+      request: (options: EndpointOptions) => Promise<OctoKitResponse<any>>;
+    }
+);
 const VERSION = require('../package.json').version;
 const USER_AGENT = `github-graph-api/${VERSION} ${getUserAgent()}`;
 
@@ -55,6 +64,8 @@ export class GraphqlError extends Error {
 }
 
 // tslint:disable-next-line: no-implicit-dependencies
+export type OctoKitResponse<T> = import('@octokit/types').OctokitResponse<T>;
+// tslint:disable-next-line: no-implicit-dependencies
 type PaginateInterface = import('@octokit/plugin-paginate-rest').PaginateInterface;
 // tslint:disable-next-line: no-implicit-dependencies
 type RestEndpointMethods = import('@octokit/plugin-rest-endpoint-methods/dist-types/generated/types').RestEndpointMethods;
@@ -66,10 +77,29 @@ type EndpointOptions = import('@octokit/types').EndpointOptions;
 export default class Client {
   private _batch: Batch | null = null;
   private readonly _options: Options;
+  public readonly request: (
+    options: EndpointOptions,
+  ) => Promise<OctoKitResponse<any>>;
   public readonly rest: RestApi;
   constructor(options: Options) {
-    this._options = options;
-    this.rest = new Octokit({authStrategy: () => this._options.auth});
+    if (options.auth) {
+      this._options = options;
+      this.rest = new Octokit({authStrategy: () => this._options.auth});
+      this.request = async (_options) => {
+        return await request({
+          ..._options,
+          headers: {
+            'user-agent': options.userAgent || USER_AGENT,
+            ..._options.headers,
+          },
+          request: {hook: options.auth.hook},
+        });
+      };
+    } else {
+      this._options = options;
+      this.rest = new Octokit({request: options.request});
+      this.request = options.request;
+    }
   }
   private readonly _processQueue = async () => {
     if (this._batch) {
@@ -79,17 +109,6 @@ export default class Client {
     }
   };
 
-  public async request(options: EndpointOptions) {
-    return await request({
-      ...options,
-      headers: {
-        'user-agent': this._options.userAgent || USER_AGENT,
-        ...options.headers,
-      },
-      request: {hook: this._options.auth.hook},
-    });
-  }
-
   public async query(query: DocumentNode, variables: any = {}): Promise<any> {
     if (!this._batch) {
       this._batch = new Batch(async (q) => {
@@ -98,12 +117,10 @@ export default class Client {
           variables: q.variables,
         };
         if (this._options.onRequest) this._options.onRequest(req);
-        const response = await request({
+        const response = await this.request({
           ...req,
           method: 'POST',
           url: '/graphql',
-          headers: {'user-agent': this._options.userAgent || USER_AGENT},
-          request: {hook: this._options.auth.hook},
         });
 
         if (this._options.onResponse) this._options.onResponse(req, response);

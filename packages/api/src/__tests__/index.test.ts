@@ -1,5 +1,6 @@
 import {readFileSync} from 'fs';
 import Client, {auth, gql, getMethod} from '../';
+import {Octokit} from '@octokit/rest';
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || readToken();
 
@@ -129,4 +130,16 @@ test('getMethod', async () => {
       },
     ]
   `);
+
+  const clientFromOctokit = new Client({
+    request: new Octokit({auth: GITHUB_TOKEN}).request,
+    onRequest: (req) => requests.push(req),
+  });
+
+  await expect(
+    getStargazers(clientFromOctokit, {
+      owner: 'ForbesLindesay',
+      name: 'atdatabases',
+    }),
+  ).resolves.toEqual(expectedStargazers('ForbesLindesay/atdatabases'));
 });
