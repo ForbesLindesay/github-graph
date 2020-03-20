@@ -94,3 +94,13 @@ This is 4 times fewer tokens used from your rate limit.
 ### REST API
 
 Unfortunatley not everything on GitHub is available via the GraphQL API. If you need to, you can use `client.rest` which matches the [octokit/rest](https://octokit.github.io/rest.js/v17) API. or you can use `client.request` which lets you make direct un-typed requests to the GitHub API.
+
+### Constructing from octokit
+
+If you already have an octokit client, you can construct a github-graph client via:
+
+```ts
+const client = new Client({
+  request: octokitClient.request,
+});
+```

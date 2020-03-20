@@ -94,7 +94,7 @@ commands:
           command: node -v && npm -v && yarn -v
       - run:
           name: Install Dependencies
-          command: yarn install --pure-lockfile
+          command: yarn install --frozen-lockfile
 
   build:
     steps:
