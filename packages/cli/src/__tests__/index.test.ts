@@ -15,6 +15,47 @@ test('example', () => {
 
     import {getMethod, gql} from '@github-graph/api';
 
+    /**
+     * An ISO-8601 encoded date string
+     */
+    export type Date = string;
+    /**
+     * An ISO-8601 encoded UTC date string
+     */
+    export type DateTime = string;
+    /**
+     * A Git object ID
+     */
+    export type GitObjectID = string;
+    /**
+     * A fully qualified reference name (e.g. \\"refs/heads/master\\")
+     */
+    export type GitRefname = string;
+    /**
+     * Git SSH string
+     */
+    export type GitSSHRemote = string;
+    /**
+     * An ISO-8601 encoded date string. Unlike the DateTime type, GitTimestamp is not converted in UTC.
+     */
+    export type GitTimestamp = string;
+    /**
+     * A string containing HTML code.
+     */
+    export type HTML = string;
+    /**
+     * An ISO-8601 encoded UTC date string with millisecond precison.
+     */
+    export type PreciseDateTime = string;
+    /**
+     * An RFC 3986, RFC 3987, and RFC 6570 (level 4) compliant URI string.
+     */
+    export type URI = string;
+    /**
+     * A valid x509 certificate string
+     */
+    export type X509Certificate = string;
+
     //==============================================================
     // START Enums and Input Objects
     //==============================================================
@@ -237,6 +278,65 @@ test('example', () => {
       }
       watchers {
         totalCount
+      }
+    }
+    \`);
+
+    // ====================================================
+    // GraphQL query operation: GetPullRequestHeadSha
+    // ====================================================
+
+    export interface GetPullRequestHeadSha_repository_pullRequest_headRef_target {
+      /**
+       * The Git object ID
+       */
+      oid: GitObjectID;
+    }
+
+    export interface GetPullRequestHeadSha_repository_pullRequest_headRef {
+      /**
+       * The object the ref points to.
+       */
+      target: GetPullRequestHeadSha_repository_pullRequest_headRef_target;
+    }
+
+    export interface GetPullRequestHeadSha_repository_pullRequest {
+      /**
+       * Identifies the head Ref associated with the pull request.
+       */
+      headRef: GetPullRequestHeadSha_repository_pullRequest_headRef | null;
+    }
+
+    export interface GetPullRequestHeadSha_repository {
+      /**
+       * Returns a single pull request from the current repository by number.
+       */
+      pullRequest: GetPullRequestHeadSha_repository_pullRequest | null;
+    }
+
+    export interface GetPullRequestHeadSha {
+      /**
+       * Lookup a given repository by the owner and repository name.
+       */
+      repository: GetPullRequestHeadSha_repository | null;
+    }
+
+    export interface GetPullRequestHeadShaVariables {
+      owner: string;
+      name: string;
+      number: number;
+    }
+
+    export const getPullRequestHeadSha = getMethod<GetPullRequestHeadSha, GetPullRequestHeadShaVariables>(gql\`
+    query GetPullRequestHeadSha($owner: String!, $name: String!, $number: Int!) {
+      repository(owner: $owner, name: $name) {
+        pullRequest(number: $number) {
+          headRef {
+            target {
+              oid
+            }
+          }
+        }
       }
     }
     \`);
