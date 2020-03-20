@@ -7,6 +7,7 @@ import {DocumentNode} from 'graphql/language/ast';
 import {print} from 'graphql';
 import gql from 'graphql-tag';
 import * as auth from '@octokit/auth';
+import {Octokit} from '@octokit/rest';
 
 export {auth};
 export {gql};
@@ -53,11 +54,22 @@ export class GraphqlError extends Error {
   }
 }
 
+// tslint:disable-next-line: no-implicit-dependencies
+type PaginateInterface = import('@octokit/plugin-paginate-rest').PaginateInterface;
+// tslint:disable-next-line: no-implicit-dependencies
+type RestEndpointMethods = import('@octokit/plugin-rest-endpoint-methods/dist-types/generated/types').RestEndpointMethods;
+export type RestApi = Readonly<
+  {paginate: PaginateInterface} & RestEndpointMethods
+>;
+// tslint:disable-next-line: no-implicit-dependencies
+type EndpointOptions = import('@octokit/types').EndpointOptions;
 export default class Client {
   private _batch: Batch | null = null;
   private readonly _options: Options;
+  public readonly rest: RestApi;
   constructor(options: Options) {
     this._options = options;
+    this.rest = new Octokit({authStrategy: () => this._options.auth});
   }
   private readonly _processQueue = async () => {
     if (this._batch) {
@@ -66,6 +78,17 @@ export default class Client {
       await b.run();
     }
   };
+
+  public async request(options: EndpointOptions) {
+    return await request({
+      ...options,
+      headers: {
+        'user-agent': this._options.userAgent || USER_AGENT,
+        ...options.headers,
+      },
+      request: {hook: this._options.auth.hook},
+    });
+  }
 
   public async query(query: DocumentNode, variables: any = {}): Promise<any> {
     if (!this._batch) {
