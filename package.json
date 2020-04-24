@@ -1,6 +1,7 @@
 {
   "name": "@github-graph/monorepo",
   "private": true,
+  "@rollingversions/ignore": true,
   "workspaces": [
     "packages/*"
   ],
