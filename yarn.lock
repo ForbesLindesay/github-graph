@@ -2259,10 +2259,10 @@ graceful-fs@^4.2.3:
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.3.tgz#4a12ff1b60376ef09862c2093edd908328be8423"
   integrity sha512-a30VEBm4PEdx1dRB7MFK7BejejvCvBronbLjht+sHuGYj8PHs7M/5Z+rt5lw551vZ7yfTCj4Vuyy3mSJytDWRQ==
 
-graphql-merge-unmerge@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/graphql-merge-unmerge/-/graphql-merge-unmerge-2.0.0.tgz#3487c55fc112b837c66a07bcef98d6a1b6f7b636"
-  integrity sha512-K8Ol+C64ZFzWAdJSruRcDI8RCqjFBrC+y5TyZB60zH5U8Mb3EjmscwIdvN99/H7UVPL9pUcHqOelHFGitkqsfw==
+graphql-merge-unmerge@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/graphql-merge-unmerge/-/graphql-merge-unmerge-3.0.0.tgz#14ff83bbe5a3e7c21a2cea0342a1a3e5dfca2981"
+  integrity sha512-v9jHy0txChHMRJraMsNW8hu9w683otzTPsT9dSKZFcmiriQQwlq9SGtZk9TeX2MlH2kbHHnHjZVusgYJKokDjA==
   dependencies:
     generate-alphabetic-name "^1.0.0"
     graphql "^14.6.0"
