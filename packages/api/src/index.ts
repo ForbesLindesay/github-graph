@@ -13,6 +13,7 @@ export {auth};
 export {gql};
 
 export type Options = {
+  maxBatchSize?: number;
   onRequest?: (request: {query: string; variables: any}) => void;
   onResponse?: (
     request: {query: string; variables: any},
@@ -76,6 +77,7 @@ export type RestApi = Readonly<
 type EndpointOptions = import('@octokit/types').EndpointOptions;
 export default class Client {
   private _batch: Batch | null = null;
+  private _batchSize: number = 0;
   private readonly _options: Options;
   public readonly request: (
     options: EndpointOptions,
@@ -105,11 +107,16 @@ export default class Client {
     if (this._batch) {
       const b = this._batch;
       this._batch = null;
+      this._batchSize = 0;
       await b.run();
     }
   };
 
   public async query(query: DocumentNode, variables: any = {}): Promise<any> {
+    if (this._batchSize >= (this._options.maxBatchSize || 100)) {
+      void this._processQueue();
+    }
+    this._batchSize++;
     if (!this._batch) {
       this._batch = new Batch(async (q) => {
         const req = {
