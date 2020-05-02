@@ -143,3 +143,16 @@ test('getMethod', async () => {
     }),
   ).resolves.toEqual(expectedStargazers('ForbesLindesay/atdatabases'));
 });
+
+test('rest endpoint', async () => {
+  const client = new Client({
+    auth: auth.createTokenAuth(GITHUB_TOKEN),
+  });
+  const result = await client.rest.repos.get({
+    owner: 'ForbesLindesay',
+    repo: 'atdatabases',
+  });
+  expect(result.data.url).toMatchInlineSnapshot(
+    `"https://api.github.com/repos/ForbesLindesay/atdatabases"`,
+  );
+});

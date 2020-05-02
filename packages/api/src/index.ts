@@ -68,7 +68,7 @@ export type OctoKitResponse<T> = import('@octokit/types').OctokitResponse<T>;
 // tslint:disable-next-line: no-implicit-dependencies
 type PaginateInterface = import('@octokit/plugin-paginate-rest').PaginateInterface;
 // tslint:disable-next-line: no-implicit-dependencies
-type RestEndpointMethods = import('@octokit/plugin-rest-endpoint-methods/dist-types/generated/types').RestEndpointMethods;
+type RestEndpointMethods = Octokit;
 export type RestApi = Readonly<
   {paginate: PaginateInterface} & RestEndpointMethods
 >;
