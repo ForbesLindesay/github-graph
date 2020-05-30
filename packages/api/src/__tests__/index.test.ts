@@ -60,7 +60,7 @@ test('getMethod', async () => {
   const requests: any[] = [];
   const client = new Client({
     auth: auth.createTokenAuth(GITHUB_TOKEN),
-    onRequest: (req) => requests.push(req),
+    onBatchRequest: (req) => requests.push(req),
   });
 
   await Promise.all([
@@ -133,7 +133,7 @@ test('getMethod', async () => {
 
   const clientFromOctokit = new Client({
     request: new Octokit({auth: GITHUB_TOKEN}).request,
-    onRequest: (req) => requests.push(req),
+    onBatchRequest: (req) => requests.push(req),
   });
 
   await expect(
