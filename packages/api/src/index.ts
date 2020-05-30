@@ -17,11 +17,16 @@ export type Options = {
   onRequest?: (request: {query: string; variables: any}) => void;
   onResponse?: (
     request: {query: string; variables: any},
+    response: {data?: any; errors?: readonly any[]},
+  ) => void;
+  onBatchRequest?: (request: {query: string; variables: any}) => void;
+  onBatchResponse?: (
+    request: {query: string; variables: any},
     response: {
       headers: any;
       status: number;
       url: any;
-      data: any;
+      data: {data?: any; errors?: any[]};
     },
   ) => void;
 } & (
@@ -50,11 +55,14 @@ export function getMethod<TResult, TArgs>(
 }
 
 export class GraphqlError extends Error {
-  constructor(request: {query: string; variables: any}, response: {data: any}) {
-    const message = response.data.errors[0].message;
+  constructor(
+    request: {query: string; variables: any},
+    response: {data?: any; errors?: readonly any[]},
+  ) {
+    const message = response.errors![0].message;
     super(message);
 
-    Object.assign(this, response.data, {request});
+    Object.assign(this, response, {request});
     this.name = 'GraphqlError';
 
     // Maintains proper stack trace (only available on V8)
@@ -123,23 +131,32 @@ export default class Client {
           query: print(q.query),
           variables: q.variables,
         };
-        if (this._options.onRequest) this._options.onRequest(req);
+        if (this._options.onBatchRequest) this._options.onBatchRequest(req);
         const response = await this.request({
           ...req,
           method: 'POST',
           url: '/graphql',
         });
 
-        if (this._options.onResponse) this._options.onResponse(req, response);
+        if (this._options.onBatchResponse)
+          this._options.onBatchResponse(req, response);
 
-        if (response.data.errors) {
-          throw new GraphqlError(req, response);
-        }
-
-        return response.data.data;
+        return response;
       });
       void Promise.resolve(null).then(this._processQueue);
     }
-    return await this._batch?.queue({query, variables});
+    let queryString: string | undefined;
+    const getQueryString = () => queryString || (queryString = print(query));
+    if (this._options.onRequest) {
+      this._options.onRequest({query: getQueryString(), variables});
+    }
+    const response = await this._batch?.queue({query, variables});
+    if (this._options.onResponse) {
+      this._options.onResponse({query: getQueryString(), variables}, response);
+    }
+    if (response.errors && response.errors.length) {
+      throw new GraphqlError({query: getQueryString(), variables}, response);
+    }
+    return response.data;
   }
 }
