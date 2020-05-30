@@ -141,7 +141,7 @@ export default class Client {
         if (this._options.onBatchResponse)
           this._options.onBatchResponse(req, response);
 
-        return response;
+        return response.data;
       });
       void Promise.resolve(null).then(this._processQueue);
     }
