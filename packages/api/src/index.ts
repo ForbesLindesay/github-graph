@@ -145,17 +145,18 @@ export default class Client {
       });
       void Promise.resolve(null).then(this._processQueue);
     }
-    let queryString: string | undefined;
-    const getQueryString = () => queryString || (queryString = print(query));
+    let request: {query: string; variables: any} | undefined;
+    const getRequest = () =>
+      request || (request = {query: print(query), variables});
     if (this._options.onRequest) {
-      this._options.onRequest({query: getQueryString(), variables});
+      this._options.onRequest(getRequest());
     }
     const response = await this._batch?.queue({query, variables});
     if (this._options.onResponse) {
-      this._options.onResponse({query: getQueryString(), variables}, response);
+      this._options.onResponse(getRequest(), response);
     }
     if (response.errors && response.errors.length) {
-      throw new GraphqlError({query: getQueryString(), variables}, response);
+      throw new GraphqlError(getRequest(), response);
     }
     return response.data;
   }
