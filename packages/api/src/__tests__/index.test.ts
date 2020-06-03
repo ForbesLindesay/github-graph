@@ -1,5 +1,5 @@
 import {readFileSync} from 'fs';
-import Client, {auth, gql, getMethod} from '../';
+import GitHubClient, {auth, gql, getMethod} from '../';
 import {Octokit} from '@octokit/rest';
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || readToken();
@@ -58,7 +58,7 @@ test('getMethod', async () => {
   });
 
   const requests: any[] = [];
-  const client = new Client({
+  const client = new GitHubClient({
     auth: auth.createTokenAuth(GITHUB_TOKEN),
     onBatchRequest: (req) => requests.push(req),
   });
@@ -131,7 +131,7 @@ test('getMethod', async () => {
     ]
   `);
 
-  const clientFromOctokit = new Client({
+  const clientFromOctokit = new GitHubClient({
     request: new Octokit({auth: GITHUB_TOKEN}).request,
     onBatchRequest: (req) => requests.push(req),
   });
@@ -145,7 +145,7 @@ test('getMethod', async () => {
 });
 
 test('rest endpoint', async () => {
-  const client = new Client({
+  const client = new GitHubClient({
     auth: auth.createTokenAuth(GITHUB_TOKEN),
   });
   const result = await client.rest.repos.get({
@@ -155,4 +155,58 @@ test('rest endpoint', async () => {
   expect(result.data.url).toMatchInlineSnapshot(
     `"https://api.github.com/repos/ForbesLindesay/atdatabases"`,
   );
+});
+
+test('rate limit', async () => {
+  const getStargazers = getMethod<
+    {repository: {nameWithOwner: string; stargazers: {totalCount: number}}},
+    {owner: string; name: string}
+  >(gql`
+    query GetStargazers($owner: String!, $name: String!) {
+      repository(owner: $owner, name: $name) {
+        nameWithOwner
+        stargazers {
+          totalCount
+        }
+      }
+    }
+  `);
+
+  const expectedStargazers = (nameWithOwner: string) => ({
+    repository: {
+      nameWithOwner,
+      stargazers: {totalCount: expect.any(Number)},
+    },
+  });
+
+  const requests: any[] = [];
+  const client = new GitHubClient({
+    auth: auth.createTokenAuth(GITHUB_TOKEN),
+    onBatchRequest: (req) => requests.push(req),
+    rateLimitOptions: {maxSize: 2, interval: 1000},
+  });
+  const start = Date.now();
+  for (let i = 0; i < 5; i++) {
+    // const startRequest = Date.now();
+    await expect(
+      getStargazers(client, {owner: 'pugjs', name: 'pug'}),
+    ).resolves.toEqual(expectedStargazers('pugjs/pug'));
+    // console.info('request duration:', Date.now() - startRequest);
+  }
+  const end = Date.now();
+  // the first 2 requests are free, then we make 3 more requests
+  // at once per second
+  expect(end - start).toBeGreaterThanOrEqual(3000);
+
+  const client2 = new GitHubClient({
+    auth: auth.createTokenAuth(GITHUB_TOKEN),
+    onBatchRequest: (req) => requests.push(req),
+    rateLimitOptions: {maxSize: 1, interval: 60_000},
+  });
+  await expect(
+    getStargazers(client2, {owner: 'pugjs', name: 'pug'}),
+  ).resolves.toEqual(expectedStargazers('pugjs/pug'));
+  await expect(
+    getStargazers(client2, {owner: 'pugjs', name: 'pug'}),
+  ).rejects.toEqual(expect.objectContaining({code: 'RATE_LIMIT_EXCEEDED'}));
 });

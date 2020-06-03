@@ -47,6 +47,20 @@
   dependencies:
     "@apollographql/graphql-language-service-types" "^2.0.0"
 
+"@authentication/lock-by-id@^0.0.2":
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/@authentication/lock-by-id/-/lock-by-id-0.0.2.tgz#4be3d26e4bb21a80811a77871925d262a073dd9c"
+  integrity sha512-GB+8xP4PcWVTlSzB5hCb13IplkxrG9T/TEqkMXxTUesK0aj8Nl7ZxBl1iqI2MWokt26T/JbuSFk/KvYR2+cAXw==
+
+"@authentication/rate-limit@^0.0.7":
+  version "0.0.7"
+  resolved "https://registry.yarnpkg.com/@authentication/rate-limit/-/rate-limit-0.0.7.tgz#a152f7a7d7c7be23907c5215d83bde8a582d72ee"
+  integrity sha512-uonLdxfQjqJMWTnoFcSMDlkt5tmfPYKVQU26hcDeIiwSQw2p7XU1gpnbxNDUyEPDgYEBeMKLInhD+6HnVdvvYQ==
+  dependencies:
+    "@authentication/lock-by-id" "^0.0.2"
+    "@types/ms" "^0.7.30"
+    ms "^2.1.1"
+
 "@babel/code-frame@^7.0.0", "@babel/code-frame@^7.8.3":
   version "7.8.3"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.8.3.tgz#33e25903d7481181534e12ec0a25f16b6fcf419e"
@@ -809,6 +823,11 @@
   version "5.1.0"
   resolved "https://registry.yarnpkg.com/@types/lru-cache/-/lru-cache-5.1.0.tgz#57f228f2b80c046b4a1bd5cac031f81f207f4f03"
   integrity sha512-RaE0B+14ToE4l6UqdarKPnXwVDuigfFv+5j9Dze/Nqr23yyuqdNvzcZi3xB+3Agvi5R4EOgAksfv3lXX4vBt9w==
+
+"@types/ms@^0.7.30":
+  version "0.7.31"
+  resolved "https://registry.yarnpkg.com/@types/ms/-/ms-0.7.31.tgz#31b7ca6407128a3d2bbc27fe2d21b345397f6197"
+  integrity sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==
 
 "@types/node-fetch@2.5.6":
   version "2.5.6"
