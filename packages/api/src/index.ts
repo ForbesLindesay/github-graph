@@ -22,7 +22,8 @@ export interface RateLimitOptions extends BucketOptions {
    */
   maxDelay?: number;
 }
-export type Options = {
+
+export interface BaseOptions {
   maxBatchSize?: number;
   onRequest?: (request: {query: string; variables: any}) => void;
   onResponse?: (
@@ -39,19 +40,20 @@ export type Options = {
       data: {data?: any; errors?: any[]};
     },
   ) => void;
-} & (
-  | {
-      auth: Pick<AuthInterface<any, any>, 'hook'>;
-      rateLimitOptions?: RateLimitOptions;
-      userAgent?: string;
-      request?: undefined;
-    }
-  | {
-      auth?: undefined;
-      userAgent?: undefined;
-      request: (options: EndpointOptions) => Promise<OctoKitResponse<any>>;
-    }
-);
+}
+export interface OptionsWithAuth extends BaseOptions {
+  auth: Pick<AuthInterface<any, any>, 'hook'>;
+  rateLimitOptions?: RateLimitOptions;
+  userAgent?: string;
+  request?: undefined;
+}
+export interface OptionsWithRequest extends BaseOptions {
+  auth?: undefined;
+  rateLimitOptions?: undefined;
+  userAgent?: undefined;
+  request: (options: EndpointOptions) => Promise<OctoKitResponse<any>>;
+}
+export type Options = OptionsWithAuth | OptionsWithRequest;
 const VERSION = require('../package.json').version;
 const USER_AGENT = `github-graph-api/${VERSION} ${getUserAgent()}`;
 
