@@ -9,13 +9,19 @@ import gql from 'graphql-tag';
 import * as auth from '@octokit/auth';
 import {Octokit} from '@octokit/rest';
 import takeToken, {
-  BucketOptions as RateLimitOptions,
+  BucketOptions,
   BucketState,
 } from '@authentication/rate-limit/lib/bucket';
 
 export {auth};
 export {gql};
 
+export interface RateLimitOptions extends BucketOptions {
+  /**
+   * Defaults to 30 seconds
+   */
+  maxDelay?: number;
+}
 export type Options = {
   maxBatchSize?: number;
   onRequest?: (request: {query: string; variables: any}) => void;
@@ -106,7 +112,10 @@ export default class GitHubClient {
         if (rateLimitOptions) {
           const now = Date.now();
           const newRateLimitState = takeToken(rateLimitState, rateLimitOptions);
-          if (newRateLimitState.timestamp - now > 30_000) {
+          if (
+            newRateLimitState.timestamp - now >
+            (rateLimitOptions.maxDelay || 30_000)
+          ) {
             const err: any = new Error(
               `You have hit the rate limit you set when constructing the GitHubClient. You can make another request in ${Math.floor(
                 (newRateLimitState.timestamp - now) / 1000,
