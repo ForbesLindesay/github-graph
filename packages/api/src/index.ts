@@ -127,21 +127,35 @@ export default class Client {
     this._batchSize++;
     if (!this._batch) {
       this._batch = new Batch(async (q) => {
-        const req = {
-          query: print(q.query),
-          variables: q.variables,
-        };
-        if (this._options.onBatchRequest) this._options.onBatchRequest(req);
-        const response = await this.request({
-          ...req,
-          method: 'POST',
-          url: '/graphql',
-        });
+        let attempts = 0;
+        while (true) {
+          const req = {
+            query: print(q.query),
+            variables: q.variables,
+          };
+          if (this._options.onBatchRequest) this._options.onBatchRequest(req);
+          const response = await this.request({
+            ...req,
+            method: 'POST',
+            url: '/graphql',
+          });
 
-        if (this._options.onBatchResponse)
-          this._options.onBatchResponse(req, response);
-
-        return response.data;
+          if (this._options.onBatchResponse)
+            this._options.onBatchResponse(req, response);
+          if (
+            response.data.errors?.length === 1 &&
+            response.data.errors[0].type === 'RATE_LIMITED'
+          ) {
+            if (attempts++ > 3) {
+              throw new GraphqlError(req, response);
+            }
+            await new Promise((resolve) => {
+              setTimeout(resolve, attempts * 5000);
+            });
+            continue;
+          }
+          return response.data;
+        }
       });
       void Promise.resolve(null).then(this._processQueue);
     }
