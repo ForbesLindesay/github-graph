@@ -8,6 +8,10 @@ import {print} from 'graphql';
 import gql from 'graphql-tag';
 import * as auth from '@octokit/auth';
 import {Octokit} from '@octokit/rest';
+import takeToken, {
+  BucketOptions as RateLimitOptions,
+  BucketState,
+} from '@authentication/rate-limit/lib/bucket';
 
 export {auth};
 export {gql};
@@ -32,6 +36,7 @@ export type Options = {
 } & (
   | {
       auth: Pick<AuthInterface<any, any>, 'hook'>;
+      rateLimitOptions?: RateLimitOptions;
       userAgent?: string;
       request?: undefined;
     }
@@ -45,12 +50,12 @@ const VERSION = require('../package.json').version;
 const USER_AGENT = `github-graph-api/${VERSION} ${getUserAgent()}`;
 
 export type Method<TResult, TArgs> = {} extends TArgs
-  ? (client: Client, args?: TArgs) => Promise<TResult>
-  : (client: Client, args: TArgs) => Promise<TResult>;
+  ? (client: GitHubClient, args?: TArgs) => Promise<TResult>
+  : (client: GitHubClient, args: TArgs) => Promise<TResult>;
 export function getMethod<TResult, TArgs>(
   doc: DocumentNode,
 ): Method<TResult, TArgs> {
-  return (async (client: Client, args?: TArgs): Promise<TResult> =>
+  return (async (client: GitHubClient, args?: TArgs): Promise<TResult> =>
     client.query(doc, args)) as Method<TResult, TArgs>;
 }
 
@@ -83,7 +88,7 @@ export type RestApi = Readonly<
 >;
 // tslint:disable-next-line: no-implicit-dependencies
 type EndpointOptions = import('@octokit/types').EndpointOptions;
-export default class Client {
+export default class GitHubClient {
   private _batch: Batch | null = null;
   private _batchSize: number = 0;
   private readonly _options: Options;
@@ -94,8 +99,29 @@ export default class Client {
   constructor(options: Options) {
     if (options.auth) {
       this._options = options;
-      this.rest = new Octokit({authStrategy: () => this._options.auth});
+      const rateLimitOptions: RateLimitOptions | undefined =
+        options.rateLimitOptions;
+      let rateLimitState: BucketState | null = null;
       this.request = async (_options) => {
+        if (rateLimitOptions) {
+          const now = Date.now();
+          const newRateLimitState = takeToken(rateLimitState, rateLimitOptions);
+          if (newRateLimitState.timestamp - now > 30_000) {
+            const err: any = new Error(
+              `You have hit the rate limit you set when constructing the GitHubClient. You can make another request in ${Math.floor(
+                (newRateLimitState.timestamp - now) / 1000,
+              )} seconds`,
+            );
+            err.code = 'RATE_LIMIT_EXCEEDED';
+            throw err;
+          }
+          rateLimitState = newRateLimitState;
+          if (newRateLimitState.timestamp > now) {
+            await new Promise((resolve) => {
+              setTimeout(resolve, newRateLimitState.timestamp - now);
+            });
+          }
+        }
         return await request({
           ..._options,
           headers: {
@@ -107,9 +133,9 @@ export default class Client {
       };
     } else {
       this._options = options;
-      this.rest = new Octokit({request: options.request});
       this.request = options.request;
     }
+    this.rest = new Octokit({request: options.request});
   }
   private readonly _processQueue = async () => {
     if (this._batch) {
