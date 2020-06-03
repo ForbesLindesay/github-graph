@@ -140,11 +140,12 @@ export default class GitHubClient {
           request: {hook: options.auth.hook},
         });
       };
+      this.rest = new Octokit({authStrategy: () => options.auth});
     } else {
       this._options = options;
       this.request = options.request;
+      this.rest = new Octokit({request: options.request});
     }
-    this.rest = new Octokit({request: options.request});
   }
   private readonly _processQueue = async () => {
     if (this._batch) {
