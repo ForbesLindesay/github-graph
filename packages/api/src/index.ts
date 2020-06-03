@@ -147,12 +147,10 @@ export default class Client {
             response.data.errors[0].type === 'RATE_LIMITED'
           ) {
             if (attempts++ > 3) {
-              const err: any = new Error('Rate limit exceeded');
-              err.code = 'RATE_LIMITED';
-              throw err;
+              throw new GraphqlError(req, response);
             }
             await new Promise((resolve) => {
-              setTimeout(resolve, 5000);
+              setTimeout(resolve, attempts * 5000);
             });
             continue;
           }
